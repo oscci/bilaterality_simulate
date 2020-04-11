@@ -13,7 +13,7 @@ library(cowplot)
 library(diptest)
 library(ggpubr)
 library(yarrr)
-library(gridExtra) #for output combining ggplots
+require(ggplot2)
 
 ```
 ## Rationale
@@ -99,13 +99,13 @@ save_plot('plots/Figure 1B.png',pirateplot(LI~session*ID,data=LIdf))
 We now proceed to use a similar script to simulate large pool of subjects, to consider the impact of varying both within and between subject variance.  Within subject variance is determined by the variable errterm, and between subject variance by the term subsd.
 
 ```{r simLI}
-npeople=1000 #Large N people simulated so can see distribution of laterality categories
+npeople=10000 #Large N people simulated so can see distribution of laterality categories
 myfilename<-paste0('data/simdat_',npeople,'.csv') #we save simulated data so can reuse in future
-skipsimulate <- 0 #if you want to just read in presimulated data, set to 1
+skipsimulate <- 1 #if you want to just read in presimulated data, set to 1
 
 if (skipsimulate==0){ #generate new set of simulated data: filename will be myfilename
 nsess=2 #2 sessions
-allsubsd <- c(0,.25,.5,.75,1,99) #these values specify the between subject variation in mean LI (we will cycle through the values that are specified here)
+allsubsd <- c(0,.25,.5,.75,1) #these values specify the between subject variation in mean LI (we will cycle through the values that are specified here)
 #When set to zero, is equivalent to model A
 
 allerr <- c(1,2) #These values will be used for the within-subject variance - again we will cycle through these values.
@@ -177,14 +177,14 @@ simrows<-nrow(mysim) #important to have this to be able to return to original nr
 
 
 ```{r read.realdata}
-mysim<-mysim[1:simrows,] #just in case this chunk is re-run - don't want to append real data more than once
+mysim<-mysim[1:simrows,] #to avoid problems just in case this chunk is re-run - don't want to append real data more than once
 
-myA2 <- read.csv('https://osf.io/fr5na/download')
+myA2 <- read.csv('https://osf.io/fr5na/download') #read from OSF stored file
 #We will just append relevant columns to mysim
-#Need to do some data wrangling for this
+#Need to do some data wrangling for this - this code just ensures all columns are in the right place so can be appended to mysim
 mockjab<-mysim[1:(2*nrow(myA2)),] #make a clone from mysim with correct Nrow
 mockjab$subsd<-'Real.data'
-mockjab$errterm<-0
+mockjab$errterm<-0 #errterm specified as zero for real data - not a meaningful value - just used to distinguish the real data from simulated data
 mockjab$Subject<-rep(1:nrow(myA2),2)
 mockjab$Session<-c(rep(1,nrow(myA2)),rep(2,nrow(myA2)))
 mockjab$LI[1:nrow(myA2)]<-myA2$Jabber1
@@ -219,12 +219,12 @@ p8 <- ggplot(thissim, aes(x = LI, colour = subject.effect)) +
         theme(plot.title = element_text(size = 12, family = "Tahoma", face = "bold"),
               text = element_text(size = 10, family = "Tahoma")) +
         scale_colour_brewer(palette="Set2")
-ggsave(plotfilename,width=7,height=4,dpi=300)
+save_plot(plotfilename,p8)
 }
 ```
 
-![]('distplot_errsd1.png')
-![]('distplot_errsd2.png')
+![]('plots/distplot_errsd1.png')
+![]('plots/distplot_errsd2.png')
 
 Compare test-retest correlation for different values for simulation, in relation to obtained value with real data
 
@@ -251,7 +251,7 @@ cortable<-mycor[1:6,]
 cortable[,2]<-cortable[,3]
 cortable[,3]<-mycor[7:12,3]
 colnames(cortable)<-c('Subject.effect','r(a)','r(b)')
-write.csv(cortable,'Correltable.csv',row.names=F)
+write.csv(cortable,'tables/Correltable.csv',row.names=F)
 ```
 
 Finally, we compare the frequency of classification into laterality categories across 2 sessions.
@@ -289,8 +289,7 @@ chidf[1:penrow,2]<-row.names(mycat)[1:penrow]
 chidf[(penrow+1):(penrow2),2]<-row.names(mycat)[1:lastrow]
 chidf[1:penrow,1]<-allerr[1]
 chidf[(penrow+1):(penrow2-1),1]<-allerr[2]
-chidf[penrow,2]<-'Bivariate, d = .5'
-chidf[(penrow2-1),2]<-'Bivariate, d = 1'
+
 
 chirow<-0
  for (thiserr in allerr){
@@ -326,11 +325,12 @@ shortchidf<-shortchidf[,c(1:4,6,9:10)]
 
 #Format original table
 #Format table to show %s
+divisor<-npeople/100
 chidf[penrow2,1]<-chidf[penrow2,2]
 chidf[penrow2,2]<-'N'
 chidf[nrow(chidf),2]<-'%'
 chidf[nrow(chidf),3:8]<-round(100*chidf[penrow2,3:8]/sum(chidf[penrow2,3:8]),1)
-chidf[1:(penrow2-1),3:8]<-chidf[1:(penrow2-1),3:8]/10 #percentages
+chidf[1:(penrow2-1),3:8]<-chidf[1:(penrow2-1),3:8]/divisor #percentages
 
 write.csv(chidf,'chisqtable.csv',row.names=F)
 
@@ -349,90 +349,11 @@ shortchidf[penrow2,1]<-shortchidf[penrow2,2]
 shortchidf[penrow2,2]<-'N'
 shortchidf[nrow(shortchidf),2]<-'%'
 shortchidf[nrow(shortchidf),3:5]<-round(100*shortchidf[penrow2,3:5]/sum(shortchidf[penrow2,3:5]),1)
-shortchidf[1:(penrow2-1),3:5]<-shortchidf[1:(penrow2-1),3:5]/10 #percentages
 
+shortchidf[1:(penrow2-1),3:5]<-shortchidf[1:(penrow2-1),3:5]/divisor #percentages
+
+write.csv(chidf,'tables/chidf.csv',row.names=F)
+write.csv(shortchidf,'tables/shortchidf.csv',row.names=F)
+print(shortchidf)
 ```
 
-Now consider underlying bimodal distribution. Plot overall distribution with different values of D. NB question then of whether we need individual differences error term, or can just use errterm for within subjs. Will explore both.
-
-```{r bimodal.demo}
-errterm <- 2
-dvals <-seq(.2,.4,.1)
-npartic<-2000 #NB for comparability with earlier sims, should be half the N, as it will be duplicated
-bivdf <- data.frame(matrix(NA,nrow=npartic*length(dvals),ncol=4))
-colnames(bivdf)<-c('sub','errterm','d','LI')
-thisrow<-0
-for (d in dvals){
-for (i in 1:npartic){
-thisrow<-thisrow+1
-  Mi<-rnorm(15,d,errterm)
-  bivdf$sub[thisrow]<-i
-  bivdf$errterm[thisrow]<-errterm
-  bivdf$d[thisrow]<-d
-  bivdf$LI[thisrow]<-mean(Mi)
-}
-
-}
-
-```
-
-```{r makebigbiv}
-allerr<-2
-bivdf$dcol <- as.factor(bivdf$d)
-bivdfrev<-bivdf #just duplicate original values and then flip to get opposite laterality
-bivdfrev$LI<-bivdf$LI*-1
-bivdf$source<-'L bias'
-bivdfrev$source<-'R bias'
-allbivdf<-rbind(bivdf,bivdfrev)
-#and, for ease of plotting, just create a duplicated set with source at 'All'
-
-dupbiv<-allbivdf
-dupbiv$source<-'Total'
-allbivdf<-rbind(allbivdf,dupbiv)
-
-```
-
-```{r compare.densities.biv}
-#Create one plot with all the subjectsd values for each level of errterm
-
-
-for (thiserr in allerr){
-  for (thisd in dvals){
-  w<-c(intersect(which(allbivdf$errterm==thiserr),which(allbivdf$d==thisd)))
-  thissim <-allbivdf[w,]
-  mytitle <-paste0('Error term = ',thiserr,'; d = ',thisd)
-  filename<-paste0('bivplot_errsd',thiserr, '_d = ',thisd,'.jpg')
-  #nb need geom_density with after_stat(count) specified to make Y-axis count rather than proportion. need updated ggplot2 for this to work
-p8 <- ggplot(thissim, aes(x = LI, colour = source)) +
-        geom_density(aes(y = after_stat(count))) +
-        scale_x_continuous(name = "Observed LI",
-                           breaks = seq(-2, 2, .5),
-                           limits=c(-2, 2)) +
-        scale_y_continuous(name = "Density",limits=c(0,5000)) +
-        ggtitle(mytitle) +
-        theme_bw() +
-        theme(plot.title = element_text(size = 10, family = "Tahoma", face = "bold"),
-              text = element_text(size = 8, family = "Tahoma")) +
-        scale_colour_brewer(palette="Set2")
-ggsave(filename,width=6,height=3,dpi=300)
-  }
-}
-```
-
-Values of .2 or .3 seem plausible if E = 1.
-Presumably, results will be v similar to model B - need to check what the SD equiv is?
-I have currently no SD specified for subject term, so would just need SD for values of + or - D
-Seems that with all values +/- d, then SD is equiv to d
-
-```{r checksd}
-npartic<-10
-for (d in c(.2,.3,.4)){
-  mysim<-c(rnorm(npartic,d,0),rnorm(npartic,-d,0))
-  print(sd(mysim))
-}
-
-```
-
-This makes it implausible that bimodal model is right, I think, at least with zero subjectsd. This is because best fit to real data with continuous model is when subsd is around half errterm. So with errterm of 1 would need to have d of .5. 
-But that would be clearly bimodal.
-Bimodality less apparent though if errterm is larger : then bimodal model with D = 1 and errterm =2 is reasonable fit.
