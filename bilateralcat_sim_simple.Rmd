@@ -71,7 +71,9 @@ for (i in 1:nsub){
   }
 }
 p1 <- pirateplot(LI~session*ID,data=LIdf)
-ggsave('Figure 1A.png')
+#was using ggsave, but after update to ggplot2 it stopped working!
+#save_plot is from cowplot, but seems to need whole pirateplot command specified
+save_plot('plots/Figure 1A.png',pirateplot(LI~session*ID,data=LIdf))
 #Now repeat for model B, with between-subject variation in LI = 1
 #Everything else is the same
 subsd <- 1
@@ -90,7 +92,7 @@ for (i in 1:nsub){
   }
 }
 p2 <- pirateplot(LI~session*ID,data=LIdf)
-ggsave('Figure 1B.png')
+save_plot('plots/Figure 1B.png',pirateplot(LI~session*ID,data=LIdf))
 
 ```
 
@@ -98,7 +100,7 @@ We now proceed to use a similar script to simulate large pool of subjects, to co
 
 ```{r simLI}
 npeople=1000 #Large N people simulated so can see distribution of laterality categories
-myfilename<-paste0('simdat_',npeople,'.csv') #we save simulated data so can reuse in future
+myfilename<-paste0('data/simdat_',npeople,'.csv') #we save simulated data so can reuse in future
 skipsimulate <- 0 #if you want to just read in presimulated data, set to 1
 
 if (skipsimulate==0){ #generate new set of simulated data: filename will be myfilename
@@ -177,7 +179,7 @@ simrows<-nrow(mysim) #important to have this to be able to return to original nr
 ```{r read.realdata}
 mysim<-mysim[1:simrows,] #just in case this chunk is re-run - don't want to append real data more than once
 
-myA2<-read.csv('~/Dropbox/ERCadvanced/project A2/all_LI_lat.csv')
+myA2 <- read.csv('https://osf.io/fr5na/download')
 #We will just append relevant columns to mysim
 #Need to do some data wrangling for this
 mockjab<-mysim[1:(2*nrow(myA2)),] #make a clone from mysim with correct Nrow
@@ -205,7 +207,7 @@ for (thiserr in allerr){
   w<-c(which(mysim$errterm==thiserr),which(mysim$errterm==0))
   thissim <-mysim[w,]
   mytitle <-paste0('Error term = ',thiserr)
-  filename<-paste0('distplot_errsd',thiserr,'.png')
+  plotfilename<-paste0('plots/distplot_errsd',thiserr,'.png')
 p8 <- ggplot(thissim, aes(x = LI, colour = subject.effect)) +
         geom_density(position="identity", fill = NA, size = 1) +
         scale_x_continuous(name = "Observed LI",
@@ -217,7 +219,7 @@ p8 <- ggplot(thissim, aes(x = LI, colour = subject.effect)) +
         theme(plot.title = element_text(size = 12, family = "Tahoma", face = "bold"),
               text = element_text(size = 10, family = "Tahoma")) +
         scale_colour_brewer(palette="Set2")
-ggsave(filename,width=7,height=4,dpi=300)
+ggsave(plotfilename,width=7,height=4,dpi=300)
 }
 ```
 
