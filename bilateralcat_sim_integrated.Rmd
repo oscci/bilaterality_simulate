@@ -1,0 +1,443 @@
+---
+title: "Simulation of bilateral task activation"
+author: "DVM Bishop"
+date: "8th April 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("ggpubr") #for ggdensity function
+require(tidyverse)
+library(cowplot)
+library(diptest)
+library(ggpubr)
+library(yarrr)
+library(gridExtra) #for output combining ggplots
+
+```
+
+## Rationale
+
+### Model A: True bilaterality.
+The first model of bilateral language assumes that there are two homologous brain regions that are implicated in a specific language function, and which are activated to the same extent when individuals perform trials of a given task, T. This model is often implicitly assumed when overall laterality is not biased to left or right.  
+
+### Model B: Individual heterogeneity.
+According to model B, individual people are lateralised to the left or the right for task T, but are equally likely to be biased to either side. This is reminiscent of early work on laterality in mice, where it was found that there was no population bias in paw preference, but individual animals were reliably left- or right-pawed (Collins, 1968).  
+
+Both models account for a lack of lateralisation at the group level, but they make different predictions regarding the distribution of LIs and the stability of LI across two sessions.  These predictions can be clarified using data simulation.  
+
+Model A can be formalised as follows:  
+
+the LI for person i on test occasion j and test trial k  
+
+LIijk= 0 + eijk  
+where eijk is measurement error, which is assumed to be random.  
+
+For Model B, on the other hand  
+
+LIijk = Mi + eijk  
+
+where Mi is the mean LI for individual i, and where the sum of all Mi is zero.  We assume, as for model A that eij  is random.  
+
+When simulating model B, there are options for how to specify the values of Mi in the population. The simplest version (model B1) is to assume that values of Mi are normally distributed with a mean of zero. In that case, for most people their true laterality (Mi) would be close to bilateral (as in model A), but there would be stable individual differences in the extent to which they departed from bilaterality.  
+
+We start by illustrating how these two conceptualisations can be handled within the same model by simulating data for 10 people on 15 trials and 2 sessions.  
+
+Although this could be done more succinctly in a function, here we run the same code for model A and model B, just changing one parameter, to make the relationship between them clearer.
+
+
+```{r model_illustrate}
+#Simplest model.
+nsub<-10
+ntrial<-15
+submean<-0 #mean across all subjects
+subsd<-0 #determines variation between subjects - zero for model A
+errterm<-1 #determines variation within subjects, trial to trial
+lastrow<-0 #initialise counter
+
+LIdf<- data.frame(matrix(NA,nrow=nsub*ntrial*2,ncol=4))
+colnames(LIdf)<-c('ID','trial','LI','session')
+
+for (i in 1:nsub){
+  Mi<-rnorm(1,0,subsd) #true mean LI for subject i
+  for (session in 1:2){
+    LItrials<-rnorm(ntrial,Mi,errterm) #observed LI for this subject for 15 trials; variability determined by errterm
+    rowrange<-(lastrow+1):(lastrow+ntrial)
+    lastrow<-lastrow+ntrial
+    LIdf$ID[rowrange]<-i
+    LIdf$LI[rowrange]<-LItrials
+    LIdf$trial[rowrange]<-1:15
+    LIdf$session[rowrange]<-session
+  }
+}
+p1 <- pirateplot(LI~session*ID,data=LIdf)
+ggsave('Figure 1A.png')
+#Now repeat for model B, with between-subject variation in LI = 1
+#Everything else is the same
+subsd <- 1
+lastrow<-0 #initialise counter
+
+for (i in 1:nsub){
+  Mi<-rnorm(1,0,subsd) #true mean LI for subject i
+  for (session in 1:2){
+    LItrials<-rnorm(ntrial,Mi,errterm) #observed LI for this subject for 15 trials; variability determined by errterm
+    rowrange<-(lastrow+1):(lastrow+ntrial)
+    lastrow<-lastrow+ntrial
+    LIdf$ID[rowrange]<-i
+    LIdf$LI[rowrange]<-LItrials
+    LIdf$trial[rowrange]<-1:15
+    LIdf$session[rowrange]<-session
+  }
+}
+p2 <- pirateplot(LI~session*ID,data=LIdf)
+ggsave('Figure 1B.png')
+
+```
+
+We now proceed to use a similar script to simulate large pool of subjects, to consider the impact of varying both within and between subject variance.  Within subject variance is determined by the variable errterm, and between subject variance by the term subsd.
+
+```{r simLI}
+skipsimulate <- 0 #if you want to just read in presimulated data, set to 1
+if (skipsimulate==0){
+npeople=1000 #Large N people simulated so can see distribution of laterality categories
+nsess=2 #2 sessions
+allsubsd <- c(0,.25,.5,.75,1,99) #these values specify the between subject variation in mean LI (we will cycle through the values that are specified here)
+#When set to zero, is equivalent to model A
+#When 99 we will use bimodal model with d specified as below
+
+allerr <- c(1.5,2) #These values will be used for the within-subject variance - again we will cycle through these values.
+#NB later chunks for categorical analysis assume 2 levels of allerr
+
+nsubsd<-length(allsubsd)
+nerrs <- length(allerr)
+mysim <- data.frame(matrix(NA,nrow=npeople*nsess*nsubsd*nerrs,ncol=10))
+
+colnames(mysim)<-c('subsd','errterm','Subject','Session','LI','SE','lowCI','hiCI','Cat','Cat2') #the Cat2 column used for coding category across both sessions
+thisrow<-0 #row counter for the data frame; incremented for each participant/session
+
+#We'll run the same process for all values specified for between/within subject variance
+for (errterm in allerr){
+for (subsd in allsubsd){
+
+ntrial <- 15 #n trials for each session
+for (p in 1:npeople){
+  Mi <- rnorm(1,0,subsd) #sets the mean for this participant as random normal variate 
+  #Note that for model A, all values are zero because subsd is 0
+
+  if (subsd==99){ #final condition, use bimodal, with value of .5 or 1, for errterm 1 and 2
+    Mi<-errterm/3
+    if (runif(1)<.5){ #flip sign of bimodal term with 50% PROBABILITY
+      Mi <- Mi * -1
+    }
+  }
+for (s in 1:nsess){
+  thisrow<-thisrow+1
+  mysim$Subject[thisrow]<-p
+  mysim$Session[thisrow]<-s
+  mysim$subsd[thisrow]<-subsd
+  mysim$errterm[thisrow]<-errterm
+
+
+  #We now create a set of 15 trials. 
+  #Mean determined by the subject-specific Mi term, within subject variance (trial by trial) determined by errterm
+LItrial <- rnorm(ntrial,Mi,errterm) #create ntrial random normal deviates with mean Mi, and SD determined by error term
+#NB this assumes no dependencies between trials; each is randomly sampled
+
+mysim$LI[thisrow]<-mean(LItrial) #LI for that session is mean of individual trial LIs
+mysim$SE[thisrow]<-sd(LItrial)/sqrt(ntrial) #standard error for session LIs
+mysim$lowCI[thisrow]<-mysim$LI[thisrow]-1.96*mysim$SE[thisrow] #95% CI lower bound for mean LI
+mysim$hiCI[thisrow]<-mysim$LI[thisrow]+1.96*mysim$SE[thisrow]#95% CI upper bound for mean LI
+#now categorise the mean LI for session as 1 = right, 2 = bilateral, 3 = left
+mysim$Cat[thisrow]<-2  #bilateral is the default
+if (mysim$hiCI[thisrow]<0) {
+  mysim$Cat[thisrow] <-1} #R lateralised if top range of CI is below zero
+if (mysim$lowCI[thisrow]>0) {
+  mysim$Cat[thisrow] <-3} #L lateralised if bottom range of CI is above zero
+
+
+#Now create 2 digit category (e.g. 12, 22, 32) representing category for session 1 + session 2
+#This will be just recorded in the row for session 2
+if (s==2){
+  mysim$Cat2[thisrow]<-10*mysim$Cat[(thisrow-1)]+mysim$Cat[thisrow]
+  mysim$CatSD2[thisrow]<-10*mysim$CatSD[(thisrow-1)]+mysim$CatSD[thisrow]
+        }
+      }
+    }
+  }
+}
+#We can save the simulated data so it can be reused
+myfilename<-paste0('simdat_',npeople,'.csv')
+write.csv(mysim,myfilename,row.names=F)
+
+}
+
+if (skipsimulate==1){
+  mysim <- read.csv('simdat_10000.csv')
+  allerr <-unique(mysim$errterm)
+  allsubsd <-unique(mysim$subsd)
+}
+simrows<-nrow(mysim) #important to have this to be able to return to original nrow after adding real data
+```
+
+
+```{r read.realdata}
+mysim<-mysim[1:simrows,] #just in case this chunk is re-run - don't want to append real data more than once
+
+myA2<-read.csv('~/Dropbox/ERCadvanced/project A2/all_LI_lat.csv')
+#We will just append relevant columns to mysim
+#Need to do some data wrangling for this
+mockjab<-mysim[1:(2*nrow(myA2)),] #make a clone from mysim with correct Nrow
+mockjab$subsd<-'Real.data'
+mockjab$errterm<-0
+mockjab$Subject<-rep(1:nrow(myA2),2)
+mockjab$Session<-c(rep(1,nrow(myA2)),rep(2,nrow(myA2)))
+mockjab$LI[1:nrow(myA2)]<-myA2$Jabber1
+mockjab$LI[(1+nrow(myA2)):(2*nrow(myA2))]<-myA2$Jabber2
+mockjab$SE<-NA
+mockjab$lowCI<-NA
+mockjab$hiCI<-NA
+mockjab$Cat[1:nrow(myA2)]<-myA2$Jabber1.1
+mockjab$Cat[(1+nrow(myA2)):(2*nrow(myA2))]<-myA2$Jabber2.1
+mockjab$Cat2<-NA
+mockjab$Cat2[mockjab$Session==2]<-myA2$Jabber12 #for session2 only
+
+mysim <- rbind(mysim,mockjab)
+mysim$subject.effect<-as.factor(mysim$subsd) 
+```
+
+```{r compare.densities}
+#Create one plot with all the subjectsd values for each level of errterm
+for (thiserr in allerr){
+  w<-c(which(mysim$errterm==thiserr),which(mysim$errterm==0))
+  thissim <-mysim[w,]
+  mytitle <-paste0('Error term = ',thiserr)
+  filename<-paste0('distplot_errsd',thiserr,'.png')
+p8 <- ggplot(thissim, aes(x = LI, colour = subject.effect)) +
+        geom_density(position="identity", fill = NA, size = 1) +
+        scale_x_continuous(name = "Observed LI",
+                           breaks = seq(-2, 2, .25),
+                           limits=c(-2, 2)) +
+        scale_y_continuous(name = "Density",limits=c(0,1.6)) +
+        ggtitle(mytitle) +
+        theme_bw() +
+        theme(plot.title = element_text(size = 12, family = "Tahoma", face = "bold"),
+              text = element_text(size = 10, family = "Tahoma")) +
+        scale_colour_brewer(palette="Set2")
+ggsave(filename,width=7,height=4,dpi=300)
+}
+```
+
+![]('distplot_errsd1.png')
+![]('distplot_errsd2.png')
+
+Compare test-retest correlation for different values for simulation, in relation to obtained value with real data
+
+```{r comparecorrs}
+mycor<-data.frame(matrix(NA,nrow=6,ncol=3))
+colnames(mycor)<-c('subject.effect','error.term','r')
+
+  j <-0 #initialise rowcounter
+ for (thiserr in allerr){
+  w<-c(which(mysim$errterm==thiserr),which(mysim$errterm==0)) #select subset of values for this value of thiserr
+  thissim <-mysim[w,]
+
+  for (i in levels(mysim$subject.effect)){
+  j<-j+1
+  thisset<-thissim[thissim$subject.effect==i,]
+  mycor[j,1]<-i
+   mycor[j,2]<-thiserr
+  mycor[j,3] <- round(cor(thisset$LI[thisset$Session==1],thisset$LI[thisset$Session==2],use="complete.obs"),3)
+  
+  }
+ }
+print(mycor)
+cortable<-mycor[1:6,]
+cortable[,2]<-cortable[,3]
+cortable[,3]<-mycor[7:12,3]
+colnames(cortable)<-c('Subject.effect','r(a)','r(b)')
+write.csv(cortable,'Correltable.csv',row.names=F)
+```
+
+Finally, we compare the frequency of classification into laterality categories across 2 sessions.
+```{r catcompare}
+
+#recode to reduce to 6 categories, as order does not matter
+w<-which(mysim$Cat2==32)
+mysim$Cat2[w]<-23
+w<-which(mysim$Cat2==21)
+mysim$Cat2[w]<-12
+w<-which(mysim$Cat2==31)
+mysim$Cat2[w]<-13
+
+mycat<-table(mysim$subject.effect,mysim$Cat2,mysim$errterm)#NB these are Ns
+mycatp<-prop.table(mycat,2) #proportions in each group
+
+
+#mycat is a 3D table. For final dimension, 1 = real data, 2 = errterm1, and 3 = errterm2.
+#First dimension is value of subsd, and 2nd dimension is categorical LI for 2 sessions
+
+lastrow<-dim(mycat)[1]
+penrow<-lastrow-1 #penultimate row - ie last row of simulated ata
+
+mycat[lastrow,,2]<-mycat[lastrow,,1] #add row of real data as last row to matrix for each value of errterm
+mycat[lastrow,,3]<-mycat[lastrow,,1]
+
+chidf <- data.frame(matrix(NA, nrow=(2*lastrow),ncol=10))
+penrow2<-nrow(chidf)-1 #penultimate row of whole df
+colnames(chidf)<-c('Error.term','Subject.err','LL','LB','LR','BB','RB','RR','chisq','p')
+chidf[1:penrow,3:8]<-mycat[1:penrow,,2] #first set of rows for first errterm
+row1<-penrow+1
+row2<-penrow2
+chidf[row1:row2,3:8]<-mycat[1:lastrow,,3] #then append values for 2nd errterm
+chidf[1:penrow,2]<-row.names(mycat)[1:penrow]
+chidf[(penrow+1):(penrow2),2]<-row.names(mycat)[1:lastrow]
+chidf[1:penrow,1]<-allerr[1]
+chidf[(penrow+1):(penrow2-1),1]<-allerr[2]
+chidf[penrow,2]<-'Bivariate, d = .5'
+chidf[(penrow2-1),2]<-'Bivariate, d = 1'
+
+chirow<-0
+ for (thiserr in allerr){
+
+#Compare each simulated distribution with obtained
+#NB category 1/3 is vanishingly small and throws out the whole computation, so we delete this column
+   
+   #The code here is very fiddly but mostly just about formatting the table.
+   #Basically, each row of the table is compared with real data in chi sq test.
+
+for (i in 1:penrow){
+  chirow<-chirow+1
+  print(rownames(mycat)[i])
+  #for each chisq make little matrix to compare with real data (row 6)
+  mymatrix<-as.matrix(mycat[c(i,lastrow),c(1:2,4:6),(thiserr+1)])
+  chi<-chisq.test(mymatrix)
+  chidf[chirow,9]<-round(chi$statistic,1)
+  chidf[chirow,10]<-round(1000*chi$p.value,0)/1000
+  if(chi$p.value< .001)
+  {chidf[chirow,10]<-'<.001'}
+  
+   }
+ }
+
+#Save reduced table with collapsed categories for subsequent analysis
+#Redo with just categories of 11/33 vs 22 vs 12/23
+
+shortchidf<-chidf
+shortchidf[,3]<-shortchidf[3]+shortchidf[8]
+shortchidf[,4]<-shortchidf[4]+shortchidf[7]
+colnames(shortchidf)[3:4]<-c('Both Lat','Lat/Bi')
+shortchidf<-shortchidf[,c(1:4,6,9:10)]
+
+#Format original table
+#Format table to show %s
+chidf[penrow2,1]<-chidf[penrow2,2]
+chidf[penrow2,2]<-'N'
+chidf[nrow(chidf),2]<-'%'
+chidf[nrow(chidf),3:8]<-round(100*chidf[penrow2,3:8]/sum(chidf[penrow2,3:8]),1)
+chidf[1:(penrow2-1),3:8]<-chidf[1:(penrow2-1),3:8]/10 #percentages
+
+write.csv(chidf,'chisqtable.csv',row.names=F)
+
+#Redo with just categories of 11/33 vs 22 vs 12/23
+shortchidf[,6:7]<-NA
+ for (i in 1:(penrow2-1)){
+   mymatrix<-as.matrix(shortchidf[c(i,penrow2),3:5])
+   chi<-chisq.test(mymatrix)
+  shortchidf[i,6]<-round(1000*chi$statistic,0)/1000
+  shortchidf[i,7]<-round(chi$p.value,3)
+  if(chi$p.value< .001)
+  {shortchidf[i,7]<-'<.001'}
+ }
+
+shortchidf[penrow2,1]<-shortchidf[penrow2,2]
+shortchidf[penrow2,2]<-'N'
+shortchidf[nrow(shortchidf),2]<-'%'
+shortchidf[nrow(shortchidf),3:5]<-round(100*shortchidf[penrow2,3:5]/sum(shortchidf[penrow2,3:5]),1)
+shortchidf[1:(penrow2-1),3:5]<-shortchidf[1:(penrow2-1),3:5]/10 #percentages
+
+```
+
+Now consider underlying bimodal distribution. Plot overall distribution with different values of D. NB question then of whether we need individual differences error term, or can just use errterm for within subjs. Will explore both.
+
+```{r bimodal.demo}
+errterm <- 2
+dvals <-seq(.2,.4,.1)
+npartic<-2000 #NB for comparability with earlier sims, should be half the N, as it will be duplicated
+bivdf <- data.frame(matrix(NA,nrow=npartic*length(dvals),ncol=4))
+colnames(bivdf)<-c('sub','errterm','d','LI')
+thisrow<-0
+for (d in dvals){
+for (i in 1:npartic){
+thisrow<-thisrow+1
+  Mi<-rnorm(15,d,errterm)
+  bivdf$sub[thisrow]<-i
+  bivdf$errterm[thisrow]<-errterm
+  bivdf$d[thisrow]<-d
+  bivdf$LI[thisrow]<-mean(Mi)
+}
+
+}
+
+```
+
+```{r makebigbiv}
+allerr<-2
+bivdf$dcol <- as.factor(bivdf$d)
+bivdfrev<-bivdf #just duplicate original values and then flip to get opposite laterality
+bivdfrev$LI<-bivdf$LI*-1
+bivdf$source<-'L bias'
+bivdfrev$source<-'R bias'
+allbivdf<-rbind(bivdf,bivdfrev)
+#and, for ease of plotting, just create a duplicated set with source at 'All'
+
+dupbiv<-allbivdf
+dupbiv$source<-'Total'
+allbivdf<-rbind(allbivdf,dupbiv)
+
+```
+
+```{r compare.densities.biv}
+#Create one plot with all the subjectsd values for each level of errterm
+
+
+for (thiserr in allerr){
+  for (thisd in dvals){
+  w<-c(intersect(which(allbivdf$errterm==thiserr),which(allbivdf$d==thisd)))
+  thissim <-allbivdf[w,]
+  mytitle <-paste0('Error term = ',thiserr,'; d = ',thisd)
+  filename<-paste0('bivplot_errsd',thiserr, '_d = ',thisd,'.jpg')
+  #nb need geom_density with after_stat(count) specified to make Y-axis count rather than proportion. need updated ggplot2 for this to work
+p8 <- ggplot(thissim, aes(x = LI, colour = source)) +
+        geom_density(aes(y = after_stat(count))) +
+        scale_x_continuous(name = "Observed LI",
+                           breaks = seq(-2, 2, .5),
+                           limits=c(-2, 2)) +
+        scale_y_continuous(name = "Density",limits=c(0,5000)) +
+        ggtitle(mytitle) +
+        theme_bw() +
+        theme(plot.title = element_text(size = 10, family = "Tahoma", face = "bold"),
+              text = element_text(size = 8, family = "Tahoma")) +
+        scale_colour_brewer(palette="Set2")
+ggsave(filename,width=6,height=3,dpi=300)
+  }
+}
+```
+
+Values of .2 or .3 seem plausible if E = 1.
+Presumably, results will be v similar to model B - need to check what the SD equiv is?
+I have currently no SD specified for subject term, so would just need SD for values of + or - D
+Seems that with all values +/- d, then SD is equiv to d
+
+```{r checksd}
+npartic<-10
+for (d in c(.2,.3,.4)){
+  mysim<-c(rnorm(npartic,d,0),rnorm(npartic,-d,0))
+  print(sd(mysim))
+}
+
+```
+
+This makes it implausible that bimodal model is right, I think, at least with zero subjectsd. This is because best fit to real data with continuous model is when subsd is around half errterm. So with errterm of 1 would need to have d of .5. 
+But that would be clearly bimodal.
+Bimodality less apparent though if errterm is larger : then bimodal model with D = 1 and errterm =2 is reasonable fit.
