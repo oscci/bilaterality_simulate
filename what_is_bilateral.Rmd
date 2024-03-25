@@ -14,18 +14,21 @@ require(tidyverse)
 library(cowplot)
 library(diptest)
 library(ggpubr)
-require(here)
+require(here) #all reads/saves will be referenced to this directory
 require(ggplot2)
+nfig <- 0
+set.seed(1) #comment this out to get different results on each run of code
 ```
 
 ## Abstract
-In a study of patterns of language laterality in left- and right-handers, Woodhead et al. (2021) noted that several tasks showed no bias to the left-hemisphere in left-handed individuals. This might appear to suggest that these functions were mediated by the two hemispheres working together equally in left-handers. Here, we consider an alternative possibility: that individuals show lateral bias on these tasks, but the bias can occur to either left or right. Here we conducted further analysis of the data from Woodhead et al, and argue that the distribution of laterality indices gives strong support to this latter hypothesis. The pattern of results suggests the  hypothesis that the impression of bilateral language processing may be an artefact of reliance on group data, and genuinely bilateral language processing may be the exception rather than the rule in individuals. 
+
+In a study of patterns of language laterality in left- and right-handers, Woodhead et al. (2021) noted that several tasks showed no bias to the left-hemisphere in left-handed individuals. This might appear to suggest that these functions were mediated by the two hemispheres working together equally in left-handers. Here, I consider an alternative possibility: that individuals show lateral bias on these tasks, but the bias can occur to either left or right. Further analysis of the distributions of data from individuals in Woodhead et al is compared with simulated data. The pattern of results suggests the hypothesis that the impression of bilateral language processing may be an artefact of reliance on group data, and genuinely bilateral language processing may be the exception rather than the rule in individuals.
 
 ## Introduction
 
 This study is an update of Woodhead et al. (2021) 'An updated investigation of the multidimensional structure of language lateralization in left- and right-handed adults: a test--retest functional transcranial Doppler sonography study with six language tasks', published in this journal. That study compared patterns of language laterality on six different tasks in 31 left-handers and 43 right-handers, finding stronger left-lateralisation in right-handers, and more evidence for two separate language factors in left-handers.
 
-Here we follow up on an incidental observation from that study, concerning the nature of bilateral language. It was observed that the test battery included one task (Syntactic Decision) where the mean laterality index (LI) showed no lateral bias in either left- or right-handers, plus a further three tasks (Phonological Decision, Semantic Decision, and Sentence Comprehension) that were not lateralised in left-handers. At first glance this might seem to indicate that for these tasks, both hemispheres participated equally in task performance, with any variability due solely to random noise (i.e., measurement error). However, if that were the case, we would not expect to see significant test-retest correlations for these tasks, nor should we observe significant correlations between the LIs with other tasks. As shown in Figure 3 of Woodhead et al (2021), the test-retest correlations for left-handers were .80, .76, .85 and .85 respectively for these four tasks, and there were also healthy cross-task correlations, of around .5 to .7. 
+Here I follow up on an incidental observation from that study, concerning the nature of bilateral language. It was observed that the test battery included one task (Syntactic Decision) where the mean laterality index (LI) showed no lateral bias in either left- or right-handers, plus a further three tasks (Phonological Decision, Semantic Decision, and Sentence Comprehension) that were not lateralised in left-handers. At first glance this might seem to indicate that for these tasks, both hemispheres participated equally in task performance, with any variability due solely to random noise (i.e., measurement error). However, if that were the case, we would not expect to see significant test-retest correlations for these tasks, nor should we observe significant correlations between the LIs with other tasks. As reported in Figure 3 of Woodhead et al (2021), the test-retest correlations for left-handers were .80, .76, .85 and .85 respectively for these four tasks, and there were also healthy cross-task correlations, of around .5 to .7.
 
 The current study uses simulations to predict distributions of LIs from different models of bilateral language, and compares these with observed distributions, concluding that it is rare for both cerebral hemispheres to participate equally in performing a language task. Where the group data suggest bilaterality, this typically indicates that there is a mixture of left- and right-biased individuals in equal proportions in the population.
 
@@ -41,64 +44,66 @@ e = random error
 
 x = interaction between person and task effects
 
-Here we focus on the case of bilateral tasks,  where the population mean does not differ from zero, so we can drop the terms involving task effects.
+Here I focus on the case of bilateral tasks, where the population mean does not differ from zero, so we can drop the terms involving task effects.
 
-Our aim is to simulate data similar to that used from Woodhead et al. (2021), where people were tested on two occasions on a task, and on each occasion, 15 test trials were given. Then for person i, in session j, on trial k
+The aim is to simulate data similar to that used from Woodhead et al. (2021), where people were tested on two occasions on a task, and on each occasion, 15 test trials were given. Then for person i, in session j, on trial k
 
 LI~ijk~ = p~i~ + e~ijk~
 
-When simulating this model, we need to specify how to simulate the distribution of p~i~ in the population. The simplest assumption is that p~i~ is normally distributed with a mean of zero. In that case, most people have a true underlying laterality close to zero, but the extent to which they depart from bilaterality constitutes a stable individual difference.
+When simulating data from this model, we need to specify how to simulate the distribution of p~i~ in the population. The simplest assumption is that p~i~ is normally distributed with a mean of zero. In that case, most people have a true underlying laterality close to zero, but the extent to which they depart from bilaterality constitutes a stable individual difference.
 
-Predictions from this model will depend on the variance of p and e. If the variance of p is large relative to the variance of e, then stable individual differences in laterality will be apparent and we will see, on the one hand, substantial variation between individuals, and on the other hand, stability from session 1 to session 2. If the variance of p is small relative to variance of e, then the principal factor determining observed laterality will be noise, and the test-retest reliability of the LI will be low.
+Predictions from this model will depend on the variance of p and e. If the variance of p is large relative to the variance of e, then stable individual differences in laterality will be apparent and we will see, on the one hand, substantial variation between individuals, and on the other hand, stability of the LI from session 1 to session 2. If the variance of p is small relative to variance of e, then the principal factor determining observed laterality will be noise, and the test-retest reliability of the LI will be low.
 
 In the simplest model of all, there are no stable individual differences in laterality for bilateral tasks - both cerebral hemispheres participate equally, and the only source of variation is random noise, so:
 
 L[I]{.underline}~ijk~= 0 + e~ijk~
 
-A preliminary simulation of this model in R is given in Appendix 1. The rnorm function to generate random normal deviates is used twice in the simulation: first, to simulate values of p for a specific person, with the code:
+A simple simulation of this model in the R programming language (R Core Team, 2023) is given in Appendix 1. The *rnorm* function to generate random normal deviates is used twice in the simulation: first, to simulate values of p for a specific person, with the code:
 
-p.i\ <- rnorm(1, 0, p.var),
+*p.i \<- rnorm(1, 0, p.var)*
 
-i.e. generate a single random number with mean of 0 and variance of p.var. If p.var is zero, there are no individual differences and p.i is always zero.
+i.e. generate a single random number with mean of 0 and variance of *p.var.* If p.var is zero, there are no individual differences and *p.i* is always zero.
 
 The second occurrence of the rnorm function is to generate the LIs for each trial for a given subject:
 
-LI.k \<- rnorm(ntrial, p.i, e.var)
+*LI.ik \<- rnorm(ntrial, p.i, e.var)*
 
-The value of ntrial is set to 15, to simulate data comparable to the real data. The previously computed p.i variable is used to specify the mean LI for an individual person, and e.var is a term that specifies the error variance.
+The value of ntrial is set to 15, to simulate data comparable to the real data (see below). The previously computed *p.i* variable is used to specify the mean LI for an individual person, and *e.var* is a term that specifies the error variance.
 
-Figure 1 shows the distribution of observed LIs for two test sessions each of 15 trials for 10 simulated subjects, contrasting two sets of parameters.  In both cases, the value of e.var was set to 1. For model A, the value of p.var was 0, whereas for model B it was 0.5. Each boxplot shows the LIs for the fifteen individual trials obtained in one session. The value of e.var determines the spread of LIs within a given subject and session (i.e. reflecting the range seen within each plot). The value of p.var determines the variation in the means of the boxplots (reflecting systematic variation from person to person). In both models, the average mean LI across all individuals will be zero, but model B shows systematic variation from person to person.
+Figure 1 shows the distribution of observed LIs for two test sessions each of 15 trials for 10 simulated subjects.  In both cases, the value of *e.var* was set to 1. For model A, the value of *p.var* was 0, whereas for model B it was *0.5*. Each boxplot shows the LIs for the fifteen individual trials obtained in one session. The value of *e.var* determines the spread of LIs within a given subject and session (i.e. reflecting the range seen within each plot). The value of *p.var* determines the variation in the means of the boxplots (reflecting systematic variation from person to person). In both models, the average mean LI across all individuals will be zero, but model B shows systematic variation from person to person.
 
 ```{r model_illustrate, echo = FALSE}
-#Simplest model.
-nsub<-500 #we simulate 500 cases so we can get accurate estimates of correlations, but we will only plot the first 10
-ntrial<-15
-p.mean<-0 #mean across all subjects
-p.var<-0 #determines variation between subjects - zero for model A
-e.var<-1 #determines variation within subjects, trial to trial
-lastrow<-0 #initialise counter
-mypvar <- c(0,.5)
-LIdf<- data.frame(matrix(NA,nrow=nsub*ntrial*2*length(mypvar),ncol=5))
+#Simulate data for individual trials/participants/sessions
+nsub      <-  1000 #we simulate 1000 cases so we can get accurate estimates of correlations, but we will only plot the first 10
+ntrial    <-    15
+p.mean    <-     0 #mean across all subjects
+e.var     <-     1 #determines variation within subjects, trial to trial
+lastrow   <-     0 #initialise counter
+mypvar    <-  c(0,.5) #values of pvar to simulate
+
+#initialise dataframe to hold results
+LIdf<- data.frame(matrix(NA, nrow = nsub*ntrial*2*length(mypvar), ncol = 5))
 colnames(LIdf)<-c('ID','p.var','session','trial','LI')
 
-
+#start simulating, using loops
 lastrow<-0
 for (p in 1:length(mypvar)){
   p.var <- mypvar[p]
   for (i in 1:nsub){
     p.i<-rnorm(1,0,p.var) #true mean LI for subject i
     for (session in 1:2){
-      LI.k<-rnorm(ntrial,p.i,e.var) #observed LI for this subject for 15 trials; variability determined by e.var
+      LI.ik<-rnorm(ntrial,p.i,e.var) #observed LI for this subject for 15 trials; variability determined by e.var
       rowrange<-(lastrow+1):(lastrow+ntrial)
       
       LIdf$ID[rowrange]<-i
       LIdf$p.var[rowrange]<-p.var
-      LIdf$LI[rowrange]<-LI.k
+      LIdf$LI[rowrange]<-LI.ik
       LIdf$trial[rowrange]<-1:ntrial
       LIdf$session[rowrange]<-session
       lastrow<-lastrow+ntrial
     }
   }
+}
   
   #Now we plot the individual trial LIs 
   mydata<-LIdf[LIdf$ID<11,] #select first 10 subs
@@ -108,17 +113,18 @@ for (p in 1:length(mypvar)){
     mydata$p[mydata$p.var==0]<-paste0('Model A: p.var = 0')
   
   g <- ggplot(mydata, aes(x=ID, y=LI, fill=Session)) +
+       geom_boxplot()+
+    geom_dotplot(binaxis='y', binwidth=.01,stackdir='center',position=position_dodge(0.8)) +
+
+    geom_jitter(shape=21,size=1,position=position_dodge(0.8))+
+ 
     xlab('Subject ID')+
     ylab('Trial LI')+
-    geom_boxplot()+
-    geom_dotplot(binaxis='y', stackdir='center',
-                 position=position_dodge(1),dotsize=.3)+
-    geom_jitter(shape=1, position=position_jitter(0.2))+
     theme(legend.position="bottom")+
     facet_grid(p ~ .)
   plotname <- paste0('plots/Figure 1','.png')
-  ggsave(plotname,height=7,width=7)
-}
+  ggsave(plotname,height=5,width=7)
+
 
 #Now we return to the full sample, compute mean LIs for each person and each session, to look at correlations
 
@@ -132,20 +138,23 @@ for (p in 1:length(mypvar)){
   mycor<-c(mycor,cor(x1,x2))
 }
 
+nfig<-nfig+1
 ```
+
+***Figure `r nfig`:** Simulated data for 10 participants. In model A, the LI of each trial is determined by chance. In model B, each participant has a specific bias (simulated as a random normal deviate with mean 0, and SD of .5).*
 
 The formalisation of the model captures a very simple point, namely that for model A there is no meaningful individual variation in the LI for a bilateral task: everyone is truly bilateral with a mean of zero. For model B, some people are reliably left-lateralised and some are reliably right-lateralised, to a greater or lesser extent. This will be reflected in measures of test-retest reliability. For Model B, where there is a significant p term, the test-retest correlation for simulated data is `r round(mycor[2],3)` , whereas for model A it is `r round(mycor[1],3)`.
 
 Even if we do not have retest data, we can distinguish the models in terms of the stability of estimates of LI across trials within a session. Each individual in each session can be classified as lateralised or unlateralised, depending on whether the 95% confidence interval around the LI estimate includes zero. Figure 2 shows the rank ordered LIs from 100 simulated participants for each model, with red bars indicating those that are significantly lateralised.
 
-```{r stackedplatesplot, echo=FALSE, warning=FALSE, message=FALSE}
+```{r platestackplot, echo=FALSE, warning=FALSE, message=FALSE}
 #Function for plotting ranked averaged LIs
 
-stackedplates <- function(myf,taskname){
+platestack <- function(myf,taskname){
   myf$mycol <-'red'
   myf$mycol[(myf$lowCI<0 & myf$hiCI>0)]<-'black'
   xaxisname<-paste0(taskname," Mean LI")
-stackedplatesplot <- ggplot(myf,aes(y=row,x=LI))+
+platestackplot <- ggplot(myf,aes(y=row,x=LI))+
   geom_point(size=.5,color=myf$mycol)+
   xlab(xaxisname)+ylab("Rank order")+
    geom_errorbar(aes(xmin=lowCI, xmax=hiCI),  width=.05,color=myf$mycol)+
@@ -158,12 +167,12 @@ facet_grid(.~ myfacet)+
          legend.position="none",
          # The new stuff
          strip.text = element_text(size = 14))
-return(stackedplatesplot) 
+return(platestackplot) 
 }
 
 ```
 
-```{r callstackedplatesplot, echo=FALSE,warning=FALSE, message=FALSE}
+```{r callplatestackplot, echo=FALSE,warning=FALSE, message=FALSE}
 #we need to create myf, which contains cols for LI, lowCI, hiCI and myfacet (var to facet by)
 
 myag <- aggregate(LIdf$LI,by=list(LIdf$p.var,LIdf$session,LIdf$ID),FUN=mean)
@@ -181,24 +190,41 @@ myf$row <-1:nplot
 myf$myfacet<-'Model A: p.var = 0'
 myf$myfacet[myf$p.var==.5]<-'Model B: p.var = .5'
 taskname<-''
-stackedplatesplot<-stackedplates(myf,taskname)
-plotname<-paste0('Fig2_stackedplatesplot_sim.png')
+platestackplot<-platestack(myf,taskname)
+plotname<-paste0('Fig2_platestackplot_sim.png')
 ggsave(here("plots",plotname),width=4.5,height=4)
 
-
+nfig <- nfig+1
 ```
 
-Figure 2 shows what we will term a stackedplates plot, i.e. a stacked display of rank ordered mean LIs with their confidence intervals as fins. For model A, where only random error determines the individual mean LIs, around 95% of cases are categorised as being bilateral, on the basis that the 95% confidence interval around the mean LI encompasses zero.  For model B, only 61% of cases are categorised as bilateral. We can see that the proportion of cases that are lateralised on this criterion is an indicator that there are stable individual differences in laterality.
+***Figure `r nfig`**: Platestack plots for Models A and B. The LIs are averaged for each simulated participant, and then displayed in rank order, with most leftward biased at the top (positive LI) and most rightward biased at the bottom. The central points show the mean LI and the horizontal fins show the 95 per cent confidence intervals (CIs). Lines are shown in red for those where the CI does not include zero: i.e., where the individual is significantly lateralised.*
+
+Figure 2 shows what we will term a platestack plot, i.e. a stacked display of rank ordered mean LIs with their confidence intervals as fins. For model A, where only random error determines the individual mean LIs, around 95% of cases are categorised as being bilateral, on the basis that the 95% confidence interval around the mean LI encompasses zero. For model B, only 61% of cases are categorised as bilateral. We can see that the proportion of cases that is lateralised on this criterion is an indicator that there are stable individual differences in laterality.
 
 ## Comparison of simulated distributions with empirical data on "bilateral" tasks
 
-We can now compare stackedplates plots for the empirical data from Woodhead et al (2021). Given that the impetus for this analysis was the bilateral profile for left-handers in group data, we focus on the four tasks that were singled out for comment by Woodhead et al, namely: 
-(B) Phonological Decision, (C) Semantic Decision,  (E) Sentence Comprehension and (F) Syntactic Decision.  
-For tasks B, C and E, the group data had suggested left-handers had bilateral processing, whereas right-handers were left-lateralised. For task F, both left and right-handers showed a bilateral profile at the group level.
+We can now compare platestack plots for the empirical data from Woodhead et al (2021). For full details of methods see the original paper: here a brief summary is given, taken from the original text.
 
+### Methods
+There were 74 participants (43 right handed, 31 left handed) who were given a battery of six language tests on two occasions separated by 3 days to 6 weeks. Handedness was assessed by self-report. Simultaneous bilateral functional transcranial Doppler ultrasound (fTCD) was used to measure the cerebral blood flow velocity (CBFV) in the left and right middle cerebral arteries as the participant performed the language tasks. The difference between left and right CBFV during a prespecified period of interest was averaged to give a laterality index (LI).  
+
+The tasks were chosen to tap a broad range of language functions, encompassing production, perception, phonology, semantics and syntax. They were:
+A.	List Generation, which required production of automatic speech (counting, reciting the days of the week or months of the year) in response to a picture
+B.	Phonological Decision, where participants decided whether the names of two pictures rhymed
+C.	Semantic Decision, where participants decided whether two pictures were semantically related
+D.	Sentence Generation, which required production of a meaningful sentence to describe a picture
+E.	Sentence Comprehension, where participants decided which of two pictures matched a spoken sentence
+F.	Syntactic Decision, where participants decided whether a sequence of words and non-words formed a plausible ‘jabberwocky’ sentence with correct syntactic structure.
+All stimulus materials for the tasks are available on OSF (https://osf.io/8s7vn/). There were 15 trials of each task per session, administered in separate runs. All tasks shared a common structure with an inter-stimulus interval of 33 seconds. Trials started with a 3 second ‘Clear Mind’ prompt, followed by the language task for 20 seconds, and ended with 10 seconds of rest. 
+
+
+### Results
+
+Given that the impetus for this analysis was the bilateral profile for left-handers in group data, we focus on the four tasks that were singled out for comment by Woodhead et al, namely: (B) Phonological Decision, (C) Semantic Decision, (E) Sentence Comprehension and (F) Syntactic Decision.\
+For tasks B, C and E, the group data had indicated that left-handers were not lateralised, whereas right-handers were left-lateralised. For task F, both left and right-handers showed a bilateral profile at the group level.
 
 ```{r readwoodhead, echo=FALSE,warning=FALSE, message=FALSE}
-#only need to run this once; can read datafile stackedplatesdata.csv
+#only need to run this once; can read datafile platestackdata.csv
 
 sess1<-read.csv('Woodhead_data/Results_Combined_Session1.csv')
 sess2<-read.csv('Woodhead_data/Results_Combined_Session2.csv')
@@ -218,15 +244,14 @@ addbit <- c(paste0(LETTERS[1:6],'2.mean_LI'),paste0(LETTERS[1:6],'2.mean_se'))
 myfile<-cbind(myfile,sess2[,addbit])
 w<-which(myfile$ID==125)
 myfile<-myfile[-w,]
-write.csv(myfile,'stackedplatesdata.csv',row.names=F)
+write.csv(myfile,'platestackdata.csv',row.names=F)
 ```
 
-
-
-```{r realstackedplates, echo=FALSE,warning=FALSE, message=FALSE}
-#We will now make stackedplatesplots for each variable
+```{r realplatestack, echo=FALSE,warning=FALSE, message=FALSE}
+#We will now make platestackplots for each variable
 #we need to create myf, which contains cols for LI, lowCI, hiCI and myfacet (var to facet by)
 longnames<-c('List Generation','Phonological Decision','Semantic Decision','Sentence Generation','Sentence Comprehension', 'Syntactic Decision')
+
 #for now we will facet by handedness
 for (s in 1:2){
 for (t in 1:6){
@@ -245,34 +270,46 @@ for (t in 1:6){
   myf<-myf[order(myf$handedness,myf$LI),]
   myf$row<-c(1:length(which(myf$handedness=='L')),1:length(which(myf$handedness=='R')))
   taskname<-paste0(longnames[t],":")
-  stackedplatesplot<-stackedplates(myf,taskname)
-  plotname<-paste0(LETTERS[t],'_stackedplatesplot',s,'.png')
-ggsave(here("figs_for_writeup",plotname),width=4,height=4)
+  platestackplot<-platestack(myf,taskname)
+  if ((t==2)&(s==1)){plotB <- platestackplot}
+  if ((t==3)&(s==1)){plotC <- platestackplot}
+  if ((t==5)&(s==1)){plotE <- platestackplot}
+  if ((t==6)&(s==1)){plotF <- platestackplot}
+  plotname<-paste0(LETTERS[t],'_platestackplot',s,'.png')
+ggsave(here("plots",plotname),width=4,height=4)
+
 }
 }
 
+bigplot <- ggarrange(plotB,plotC,plotE,plotF, 
+          ncol = 2, nrow = 2)
+#We will assemble the session 1 plots for tasks B, C, E and F to create Figure 3.
+plotname<-'bigplot.png'
+ggsave(here("plots",plotname),width=8,height=6)
 
+nfig <- nfig+1
 ```
 
-Figure 3 shows stackedplates plots from Session 1 for left- and right-handers on these four tasks. Session 2 data are very similar, and the plots for these are available on Open Science Framework, together with plots for tasks A (list generation) and D (sentence generation), which were significantly left-lateralised in both left- and right-handers.  
+Figure `r nfig`: Platestack plots from Session 1 for left- and right-handers on four tasks. The mean LIs for each participant, and then displayed in rank order, with most leftward biased at the top (positive LI) and most rightward biased at the bottom. The central points show the mean LI and the horizontal fins show the 95 per cent confidence intervals (CIs). Lines are shown in red for those where the CI does not include zero: i.e., where the individual is significantly lateralised.
 
-Just from inspection we can see that for all four tasks, the proportion of individuals with significant lateralisation of the LI (shown in red) is far higher than the 5% predicted by a model with no stable individual variation. In general, the left-handers have a mixture of left- and right-lateralised individuals on tasks where right-handers show predominant left-lateralisation. The exception is the Syntactic Decision task (F), where a relatively high proportion of participants are lateralised, either to left or to the right, in both left- and right-handed groups.   
+Figure 3 shows platestack plots from Session 1 for left- and right-handers on these four tasks. Session 2 data are very similar, and the plots for these are available on Open Science Framework, together with plots for tasks A (list generation) and D (sentence generation), which were significantly left-lateralised in both left- and right-handers.
+
+By inspection we can see that for all four tasks, the proportion of individuals with significant lateralisation of the LI (shown in red) is far higher than the 5% predicted by a model with no stable individual variation. Around 50% of left-handers show significant lateralisation, with a mixture of left- and right-sided bias. Where right-handers have a lateral bias, it is predominantly to the left, except on the Syntactic Decision task (F), where a relatively high proportion of participants are lateralised, either to left or to the right, in both left- and right-handed groups.
 
 ## Discussion
 
-This analysis stresses the importance of distinguishing between group data and individual data when considering whether a language function involves bilateral processing. Four of the six tasks in the language battery were not significantly lateralised in left-handers, as determined by comparing the mean LI with zero. Although it might be tempting to conclude that these are functions that are mediated by both hemispheres contributing equally, the LIs from individuals show that this is not the case: a high proportion of participants showed significant bias to one side for these tasks, but in left-handers (and in both left- and right-handers for Syntactic Decision) the bias was at least as likely to favour the right as the left hemisphere. 
+This analysis stresses the importance of distinguishing between group data and individual data when considering whether a language function involves bilateral processing. Four of the six tasks in the language battery were not significantly lateralised in left-handers, as determined by comparing the group mean LI with zero. Although it might be tempting to conclude that these are functions that are mediated by both hemispheres contributing equally, the LIs from individuals show that this is not the case: a high proportion of participants showed significant bias to one side for these tasks, but in left-handers (and in both left- and right-handers for Syntactic Decision) the bias was at least as likely to favour the right as the left hemisphere.
 
-We may further note that, even those participants who were categorised as bilateral may show some bias that is masked by error of measurement. We have found when reanalysing language laterality data from fMRI that the proportion of individuals categorised as having bilateral language declines when we adopt analytic methods designed to reduce measurement error (Bishop et al., 2024). We propose the working hypothesis that truly bilateral processing, with both hemispheres working together equally, is the exception rather than the rule in language tasks.  In future work, we aim to test this more thoroughly with new data using both fTCD and fMRI in the same participants. 
+We may further note that, even those participants who were categorised as bilateral may show some bias that is masked by error of measurement. We have found when reanalysing language laterality data from fMRI that the proportion of individuals categorised as having bilateral language declines when we adopt analytic methods designed to reduce measurement error (Bishop et al., 2024). This suggests a provocative working hypothesis that truly bilateral processing, with both hemispheres working together equally, is the exception rather than the rule in language tasks.  In future work, we aim to test this more thoroughly with new data using both fTCD and fMRI in the same participants.
 
-## References  
+## References
 
-Bishop, D. V. M., Woodhead, Z. V. J., & Watkins, K. E. (2024). Approaches to measuring language lateralisation: An exploratory study comparing two fmri methods and functional transcranial Doppler ultrasound. Neurobiology of Language, 1–53. https://doi.org/10.1162/nol_a_00136  
+Bishop, D. V. M., Woodhead, Z. V. J., & Watkins, K. E. (2024). Approaches to measuring language lateralisation: An exploratory study comparing two fmri methods and functional transcranial Doppler ultrasound. Neurobiology of Language, 1--53. <https://doi.org/10.1162/nol_a_00136>
 
-Woodhead, Z. V. J., Bradshaw, A. R., Wilson, A. C., Thompson, P. A., & Bishop, D. V. M. (2019). Testing the unitary theory of language lateralization using functional transcranial Doppler sonography in adults. Royal Society Open Science, 6(3), 181801. https://doi.org/10.1098/rsos.181801  
+R Core Team (2023). R: A language and environment for statistical
+computing. R Foundation for Statistical Computing, Vienna, Austria. URL:
+<https://www.R-project.org/.>
 
-Woodhead, Z. V. J., Thompson, P. A., Karlsson, E. M., & Bishop, D. V. M. (2021). An updated investigation of the multidimensional structure of language lateralization in left- and right-handed adults: A test–retest functional transcranial Doppler sonography study with six language tasks. Royal Society Open Science, 8(2), 200696. https://doi.org/10.1098/rsos.200696
+Woodhead, Z. V. J., Bradshaw, A. R., Wilson, A. C., Thompson, P. A., & Bishop, D. V. M. (2019). Testing the unitary theory of language lateralization using functional transcranial Doppler sonography in adults. Royal Society Open Science, 6(3), 181801. <https://doi.org/10.1098/rsos.181801>
 
-
-
-
-
+Woodhead, Z. V. J., Thompson, P. A., Karlsson, E. M., & Bishop, D. V. M. (2021). An updated investigation of the multidimensional structure of language lateralization in left- and right-handed adults: A test--retest functional transcranial Doppler sonography study with six language tasks. Royal Society Open Science, 8(2), 200696. <https://doi.org/10.1098/rsos.200696>
