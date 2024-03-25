@@ -1,7 +1,6 @@
 ---
 title: "What is bilateral language? Evidence from distributions of laterality indices"
-author: "Dorothy Bishop"
-date: "2024-03-24"
+author: "Dorothy V. M. Bishop"
 output:
   word_document: default
   html_document: default
@@ -18,19 +17,29 @@ require(here) #all reads/saves will be referenced to this directory
 require(ggplot2)
 nfig <- 0
 set.seed(1) #comment this out to get different results on each run of code
+
+# see https://osf.io/qetj5/ for OSF stuff for 2021 paper
 ```
+
+Department of Experimental Psychology,   
+Anna Watts Building,    
+University of Oxford,  
+OX2 2GG.  
+email: dorothy.bishop@psy.ox.ac.uk  
+ORCID: 0000-0002-2448-4033  
+
 
 ## Abstract
 
-In a study of patterns of language laterality in left- and right-handers, Woodhead et al. (2021) noted that several tasks showed no bias to the left-hemisphere in left-handed individuals. This might appear to suggest that these functions were mediated by the two hemispheres working together equally in left-handers. Here, I consider an alternative possibility: that individuals show lateral bias on these tasks, but the bias can occur to either left or right. Further analysis of the distributions of data from individuals in Woodhead et al is compared with simulated data. The pattern of results suggests the hypothesis that the impression of bilateral language processing may be an artefact of reliance on group data, and genuinely bilateral language processing may be the exception rather than the rule in individuals.
+In a study of patterns of language laterality in left- and right-handers, Woodhead et al. (2021) noted that several tasks showed no bias to the left-hemisphere in left-handed individuals. This might appear to suggest that these functions were mediated by the two hemispheres working together equally in left-handers. Here, I consider an alternative possibility: that individuals show lateral bias on these tasks, but the bias can occur to either left or right. Further analysis of the distributions of data from individuals in Woodhead et al is compared with simulated data. The pattern of results suggests that the impression of bilateral language processing may be an artefact of reliance on group data: even though the group mean does not differ from zero, a high proportion of individuals are biased to left or right.
 
 ## Introduction
 
-This study is an update of Woodhead et al. (2021) 'An updated investigation of the multidimensional structure of language lateralization in left- and right-handed adults: a test--retest functional transcranial Doppler sonography study with six language tasks', published in this journal. That study compared patterns of language laterality on six different tasks in 31 left-handers and 43 right-handers, finding stronger left-lateralisation in right-handers, and more evidence for two separate language factors in left-handers.
+This study is an update of Woodhead et al. (2021) 'An updated investigation of the multidimensional structure of language lateralization in left- and right-handed adults: a test--retest functional transcranial Doppler sonography study with six language tasks', published in Royal Society Open Science. That study compared patterns of language laterality on six different tasks in 31 left-handers and 43 right-handers, finding stronger left-lateralisation in right-handers, and more evidence for two separate language factors in left-handers.
 
 Here I follow up on an incidental observation from that study, concerning the nature of bilateral language. It was observed that the test battery included one task (Syntactic Decision) where the mean laterality index (LI) showed no lateral bias in either left- or right-handers, plus a further three tasks (Phonological Decision, Semantic Decision, and Sentence Comprehension) that were not lateralised in left-handers. At first glance this might seem to indicate that for these tasks, both hemispheres participated equally in task performance, with any variability due solely to random noise (i.e., measurement error). However, if that were the case, we would not expect to see significant test-retest correlations for these tasks, nor should we observe significant correlations between the LIs with other tasks. As reported in Figure 3 of Woodhead et al (2021), the test-retest correlations for left-handers were .80, .76, .85 and .85 respectively for these four tasks, and there were also healthy cross-task correlations, of around .5 to .7.
 
-The current study uses simulations to predict distributions of LIs from different models of bilateral language, and compares these with observed distributions, concluding that it is rare for both cerebral hemispheres to participate equally in performing a language task. Where the group data suggest bilaterality, this typically indicates that there is a mixture of left- and right-biased individuals in equal proportions in the population.
+The current study uses simulations to predict distributions of LIs from different models of bilateral language, and compares these with observed distributions, concluding that bilaterality is much less common in individuals than might be suggested by the group data. Rather, we commonly see a high proportion of left- and right-biased individuals in the population.
 
 ## Formal modeling of bilateral language
 
@@ -58,7 +67,7 @@ In the simplest model of all, there are no stable individual differences in late
 
 L[I]{.underline}~ijk~= 0 + e~ijk~
 
-A simple simulation of this model in the R programming language (R Core Team, 2023) is given in Appendix 1. The *rnorm* function to generate random normal deviates is used twice in the simulation: first, to simulate values of p for a specific person, with the code:
+A simple simulation of this model in the R programming language (R Core Team, 2023) is available on Open Science Framework. The *rnorm* function to generate random normal deviates is used twice in the simulation: first, to simulate values of p for a specific person, with the code:
 
 *p.i \<- rnorm(1, 0, p.var)*
 
@@ -199,24 +208,17 @@ nfig <- nfig+1
 
 ***Figure `r nfig`**: Platestack plots for Models A and B. The LIs are averaged for each simulated participant, and then displayed in rank order, with most leftward biased at the top (positive LI) and most rightward biased at the bottom. The central points show the mean LI and the horizontal fins show the 95 per cent confidence intervals (CIs). Lines are shown in red for those where the CI does not include zero: i.e., where the individual is significantly lateralised.*
 
-Figure 2 shows what we will term a platestack plot, i.e. a stacked display of rank ordered mean LIs with their confidence intervals as fins. For model A, where only random error determines the individual mean LIs, around 95% of cases are categorised as being bilateral, on the basis that the 95% confidence interval around the mean LI encompasses zero. For model B, only 61% of cases are categorised as bilateral. We can see that the proportion of cases that is lateralised on this criterion is an indicator that there are stable individual differences in laterality.
+Figure 2 shows what we will term a platestack plot, i.e. a stacked display of rank ordered mean LIs with their confidence intervals as fins. For model A, where only random error determines the individual mean LIs, around 95% of cases are categorised as being bilateral, on the basis that the 95% confidence interval around the mean LI encompasses zero. For model B, only 61% of cases are categorised as bilateral. We can see that the high proportion of cases that is lateralised on this criterion is an indicator that there are stable individual differences in laterality.
 
 ## Comparison of simulated distributions with empirical data on "bilateral" tasks
 
 We can now compare platestack plots for the empirical data from Woodhead et al (2021). For full details of methods see the original paper: here a brief summary is given, taken from the original text.
 
 ### Methods
-There were 74 participants (43 right handed, 31 left handed) who were given a battery of six language tests on two occasions separated by 3 days to 6 weeks. Handedness was assessed by self-report. Simultaneous bilateral functional transcranial Doppler ultrasound (fTCD) was used to measure the cerebral blood flow velocity (CBFV) in the left and right middle cerebral arteries as the participant performed the language tasks. The difference between left and right CBFV during a prespecified period of interest was averaged to give a laterality index (LI).  
 
-The tasks were chosen to tap a broad range of language functions, encompassing production, perception, phonology, semantics and syntax. They were:
-A.	List Generation, which required production of automatic speech (counting, reciting the days of the week or months of the year) in response to a picture
-B.	Phonological Decision, where participants decided whether the names of two pictures rhymed
-C.	Semantic Decision, where participants decided whether two pictures were semantically related
-D.	Sentence Generation, which required production of a meaningful sentence to describe a picture
-E.	Sentence Comprehension, where participants decided which of two pictures matched a spoken sentence
-F.	Syntactic Decision, where participants decided whether a sequence of words and non-words formed a plausible ‘jabberwocky’ sentence with correct syntactic structure.
-All stimulus materials for the tasks are available on OSF (https://osf.io/8s7vn/). There were 15 trials of each task per session, administered in separate runs. All tasks shared a common structure with an inter-stimulus interval of 33 seconds. Trials started with a 3 second ‘Clear Mind’ prompt, followed by the language task for 20 seconds, and ended with 10 seconds of rest. 
+There were 74 participants (43 right handed, 31 left handed) who were given a battery of six language tests on two occasions separated by 3 days to 6 weeks. Handedness was assessed by self-report. Simultaneous bilateral functional transcranial Doppler ultrasound (fTCD) was used to measure the cerebral blood flow velocity (CBFV) in the left and right middle cerebral arteries as the participant performed the language tasks. The difference between left and right CBFV during a prespecified period of interest was averaged to give a laterality index (LI).
 
+The tasks were chosen to tap a broad range of language functions, encompassing production, perception, phonology, semantics and syntax. They were: A. List Generation, which required production of automatic speech (counting, reciting the days of the week or months of the year) in response to a picture B. Phonological Decision, where participants decided whether the names of two pictures rhymed C. Semantic Decision, where participants decided whether two pictures were semantically related D. Sentence Generation, which required production of a meaningful sentence to describe a picture E. Sentence Comprehension, where participants decided which of two pictures matched a spoken sentence F. Syntactic Decision, where participants decided whether a sequence of words and non-words formed a plausible 'jabberwocky' sentence with correct syntactic structure. All stimulus materials for the tasks are available on OSF (<https://osf.io/8s7vn/>). There were 15 trials of each task per session, administered in separate runs. All tasks shared a common structure with an inter-stimulus interval of 33 seconds. Trials started with a 3 second 'Clear Mind' prompt, followed by the language task for 20 seconds, and ended with 10 seconds of rest.
 
 ### Results
 
@@ -290,7 +292,7 @@ ggsave(here("plots",plotname),width=8,height=6)
 nfig <- nfig+1
 ```
 
-Figure `r nfig`: Platestack plots from Session 1 for left- and right-handers on four tasks. The mean LIs for each participant, and then displayed in rank order, with most leftward biased at the top (positive LI) and most rightward biased at the bottom. The central points show the mean LI and the horizontal fins show the 95 per cent confidence intervals (CIs). Lines are shown in red for those where the CI does not include zero: i.e., where the individual is significantly lateralised.
+***Figure `r nfig`:** Platestack plots from Session 1 for left- and right-handers on four tasks. The mean LIs for each participant, and then displayed in rank order, with most leftward biased at the top (positive LI) and most rightward biased at the bottom. The central points show the mean LI and the horizontal fins show the 95 per cent confidence intervals (CIs). Lines are shown in red for those where the CI does not include zero: i.e., where the individual is significantly lateralised.*
 
 Figure 3 shows platestack plots from Session 1 for left- and right-handers on these four tasks. Session 2 data are very similar, and the plots for these are available on Open Science Framework, together with plots for tasks A (list generation) and D (sentence generation), which were significantly left-lateralised in both left- and right-handers.
 
@@ -300,16 +302,20 @@ By inspection we can see that for all four tasks, the proportion of individuals 
 
 This analysis stresses the importance of distinguishing between group data and individual data when considering whether a language function involves bilateral processing. Four of the six tasks in the language battery were not significantly lateralised in left-handers, as determined by comparing the group mean LI with zero. Although it might be tempting to conclude that these are functions that are mediated by both hemispheres contributing equally, the LIs from individuals show that this is not the case: a high proportion of participants showed significant bias to one side for these tasks, but in left-handers (and in both left- and right-handers for Syntactic Decision) the bias was at least as likely to favour the right as the left hemisphere.
 
-We may further note that, even those participants who were categorised as bilateral may show some bias that is masked by error of measurement. We have found when reanalysing language laterality data from fMRI that the proportion of individuals categorised as having bilateral language declines when we adopt analytic methods designed to reduce measurement error (Bishop et al., 2024). This suggests a provocative working hypothesis that truly bilateral processing, with both hemispheres working together equally, is the exception rather than the rule in language tasks.  In future work, we aim to test this more thoroughly with new data using both fTCD and fMRI in the same participants.
+We may further note that, even those participants who were categorised as bilateral may show some bias that is masked by error of measurement. We have found when reanalysing language laterality data from fMRI that the proportion of individuals categorised as having bilateral language declines when we adopt analytic methods designed to reduce measurement error (Bishop et al., 2024). This suggests a provocative working hypothesis that truly bilateral processing, with both hemispheres working together equally, could be the exception rather than the rule in language tasks. It will be of interest to test this with other datasets that have laterality data from fTCD and/or fMRI, and to extend beyond language to other domains.
 
+## Competing interests  
+The author has no competing interests.  
+  
+## Funding  
+This study was supported by the Wellcome Trust (082498) and by an Advanced Grant from the European Research Council (694189).  
+  
 ## References
 
-Bishop, D. V. M., Woodhead, Z. V. J., & Watkins, K. E. (2024). Approaches to measuring language lateralisation: An exploratory study comparing two fmri methods and functional transcranial Doppler ultrasound. Neurobiology of Language, 1--53. <https://doi.org/10.1162/nol_a_00136>
+Bishop, D. V. M., Woodhead, Z. V. J., & Watkins, K. E. (2024). Approaches to measuring language lateralisation: An exploratory study comparing two fMRI methods and functional transcranial Doppler ultrasound. *Neurobiology of Language*, 1--53. <https://doi.org/10.1162/nol_a_00136>
 
-R Core Team (2023). R: A language and environment for statistical
-computing. R Foundation for Statistical Computing, Vienna, Austria. URL:
-<https://www.R-project.org/.>
+R Core Team (2023). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. URL: <https://www.R-project.org/.>
 
-Woodhead, Z. V. J., Bradshaw, A. R., Wilson, A. C., Thompson, P. A., & Bishop, D. V. M. (2019). Testing the unitary theory of language lateralization using functional transcranial Doppler sonography in adults. Royal Society Open Science, 6(3), 181801. <https://doi.org/10.1098/rsos.181801>
+Woodhead, Z. V. J., Bradshaw, A. R., Wilson, A. C., Thompson, P. A., & Bishop, D. V. M. (2019). Testing the unitary theory of language lateralization using functional transcranial Doppler sonography in adults. *Royal Society Open Science,* *6*(3), 181801. <https://doi.org/10.1098/rsos.181801>
 
-Woodhead, Z. V. J., Thompson, P. A., Karlsson, E. M., & Bishop, D. V. M. (2021). An updated investigation of the multidimensional structure of language lateralization in left- and right-handed adults: A test--retest functional transcranial Doppler sonography study with six language tasks. Royal Society Open Science, 8(2), 200696. <https://doi.org/10.1098/rsos.200696>
+Woodhead, Z. V. J., Thompson, P. A., Karlsson, E. M., & Bishop, D. V. M. (2021). An updated investigation of the multidimensional structure of language lateralization in left- and right-handed adults: A test--retest functional transcranial Doppler sonography study with six language tasks. *Royal Society Open Science*, *8(*2), 200696. <https://doi.org/10.1098/rsos.200696>
