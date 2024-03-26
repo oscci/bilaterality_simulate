@@ -18,13 +18,13 @@ require(ggplot2)
 nfig <- 0
 set.seed(1) #comment this out to get different results on each run of code
 
-# see https://osf.io/qetj5/ for OSF stuff for 2021 paper
+# see https://osf.io/qetj5/ for OSF files for 2021 paper
 ```
 
 Department of Experimental Psychology,   
 Anna Watts Building,    
 University of Oxford,  
-OX2 2GG.  
+OX2 6GG.  
 email: dorothy.bishop@psy.ox.ac.uk  
 ORCID: 0000-0002-2448-4033  
 
@@ -227,7 +227,7 @@ For tasks B, C and E, the group data had indicated that left-handers were not la
 
 ```{r readwoodhead, echo=FALSE,warning=FALSE, message=FALSE}
 #only need to run this once; can read datafile platestackdata.csv
-
+# files can be downloaded from: https://osf.io/qetj5/
 sess1<-read.csv('Woodhead_data/Results_Combined_Session1.csv')
 sess2<-read.csv('Woodhead_data/Results_Combined_Session2.csv')
 participants <- read.csv('Woodhead_data/A2_Participant_Info_Combined.csv')
